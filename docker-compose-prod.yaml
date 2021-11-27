@@ -1,0 +1,41 @@
+version: '3.8'
+services:
+  exam-me-frontend:
+    build: ./client/exam-me/
+    container_name: exam_me_frontend
+    privileged: true
+    restart: always
+    networks:
+      - exam-me-network
+    env_file: .env
+    ports:
+      - 80:80
+    command: >
+      bash -c "
+        sh /usr/local/bin/entrypoint.sh &&
+        nginx -g 'daemon off;'
+      "
+
+  mqtt:
+    image: emqx/emqx:4.3.8
+    container_name: mqtt_service
+    restart: always
+    ports:
+      - 1883:1883
+      - 9001:9001
+    networks:
+      - exam-me-network
+
+  exam-me-backend:
+    build: ./services/importer/
+    container_name: exam_me_backend
+    restart: always
+    networks:
+      - exam-me-network
+    ports:
+      - 8090:9999
+
+networks:
+  exam-me-network:
+
+    null

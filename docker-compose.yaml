@@ -1,0 +1,71 @@
+version: '3.8'
+services:
+  # exam-me-frontend:
+  #   build: ./client/exam-me/Dockerfile-dev
+  #   container_name: exam_me_frontend
+  #   privileged: true
+  #   restart: always
+  #   networks:
+  #     - exam-me-network
+  #   env_file: .env
+  #   volumes:
+  #     - ./client/exam-me:/app
+  #   stdin_open: true
+  #   depends_on:
+  #     - mongodb
+  #     - mqtt
+  #   ports:
+  #     - 80:8080
+  #   command: >
+  #     bash -c "
+  #       cd /app && npm run serve
+  #     "
+
+  mqtt:
+    image: emqx/emqx:4.3.8
+    container_name: mqtt_service
+    restart: always
+    ports:
+      - 1883:1883
+      - 8083:8083
+      - 9001:9001
+      - 18083:18083
+    networks:
+      - exam-me-network
+    logging:
+      driver: none
+
+  mongodb:
+    image: mongo:5.0.4
+    container_name: mongodb_service
+    restart: always
+    networks:
+      - exam-me-network
+    ports:
+      - 27017:27017
+    logging:
+      driver: none
+
+  exam-me-backend:
+    image: node:16.13.0
+    container_name: exam_me_backend
+    restart: always
+    volumes:
+      - ./services/backend:/service
+    networks:
+      - exam-me-network
+    ports:
+      - 8090:9999
+    depends_on:
+      - mongodb
+      - mqtt
+    command: >
+      bash -c "
+        npm install -g nodemon &&
+        cd /service && nodemon app.js
+      "
+
+networks:
+  exam-me-network:
+
+    null
