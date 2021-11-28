@@ -1,36 +1,38 @@
 <template>
-  <v-container class="exams">
-    <div class="header">
-      <div>Room {{ getCode() }}</div>
-    </div>
-
-    <div class="content" v-grid>
-      <div class="exam-card create-card" @click="createExam()">
+  <div class="room">
+    <v-container>
+      <div class="header">
         <div>
-          <v-icon x-large color="#555">mdi-plus</v-icon>
+          <v-btn
+            icon
+            color="var(--third)"
+            @click="$router.push({ name: 'Rooms' })"
+          >
+            <v-icon>mdi-chevron-left</v-icon>
+          </v-btn>
+          Room {{ getCode() }}
         </div>
-        <div> Create Exam </div>
+        <v-tabs
+          class="room-tabs"
+          fixed-tabs
+          background-color="var(--background)"
+          dark
+        >
+          <v-tab :to="{ name: 'Exams' }">
+            Examenes
+          </v-tab>
+          <v-tab :to="{ name: 'Review' }">
+            Revision
+          </v-tab>
+          <v-tab :to="{ name: 'Results' }">
+            Resultados
+          </v-tab>
+        </v-tabs>
       </div>
-      <div class="exam-card" v-for="(exam, key) in exams || []" :key="key" @click="openExam(exam)">
-        <div class="card-header">
-          <div class="card-title">
-            <div class="card-info" :class="{ 'active': exam.active }"></div>
-            <div class="card-info-description">{{ exam.name }}</div>
-          </div>
-          <div class="card-status" @click="toggleStatusExam(exam)">
-            <v-icon color="#ED3C24">mdi-power</v-icon>
-          </div>
-        </div>
+    </v-container>
 
-        <div class="card-content">
-          <div class="card-row">
-            <div class="card-row-left">Code:</div>
-            <div class="card-row-right">{{ exam.code }}</div>
-          </div> 
-        </div>
-      </div>
-    </div>
-  </v-container>
+    <router-view></router-view>
+  </div>
 </template>
 
 <script>
@@ -59,7 +61,6 @@ export default {
     }),
   },
   mounted() {
-    window.room = this
     const access = localStorage.getItem('exam-me-access') 
     window.mqtt.publish(`examme/${access}`, JSON.stringify({
       action: 'room/details',
@@ -74,7 +75,7 @@ export default {
 </script>
 
 <style scoped>
-.exams .header {
+.room .header {
   background: #FFFFFF;
   box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
   border-radius: 10px;
@@ -92,7 +93,7 @@ export default {
   margin-bottom: 12px;
 }
 
-.exams .content .exam-card {
+.room .content .exam-card {
   background: #FFFFFF;
   box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
   border-radius: 10px;
@@ -106,7 +107,7 @@ export default {
   cursor: pointer;
 }
 
-.exams .content .create-card {
+.room .content .create-card {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -118,7 +119,11 @@ export default {
   text-transform: uppercase;
 }
 
-.exams .content .create-card div {
+.room .content .create-card div {
   margin: 8px;
+}
+
+.room .room-tabs {
+  border-radius: 10px;
 }
 </style>

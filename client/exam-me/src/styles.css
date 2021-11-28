@@ -40,7 +40,8 @@
 
 .background-app {
   background: var(--background);
-  height: 100vh;
+  min-height: 100vh;
+  background-attachment: fixed;
 }
 
 .grid-table {

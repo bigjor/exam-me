@@ -45,12 +45,49 @@ export default new Router({
         {
           name: 'Room',
           path: 'room/:id',
+          redirect: 'room/:id/exams',
           component: () => import('@/views/Admin/Room/Room'),
           props: (value) => ({
             roomId: value.params.id,
             ...value,
           }),
-        }
+          children: [
+            {
+              name: 'Exams',
+              path: 'exams',
+              component: () => import('@/views/Admin/Room/Exams/Exams'),
+              props: (value) => ({
+                ...value,
+              }),
+            },
+            {
+              name: 'Review',
+              path: 'review',
+              component: () => import('@/views/Admin/Room/Review/Review'),
+              props: (value) => ({
+                ...value,
+              }),
+            },
+            {
+              name: 'Results',
+              path: 'results',
+              component: () => import('@/views/Admin/Room/Results/Results'),
+              props: (value) => ({
+                ...value,
+              }),
+            },
+            {
+              name: 'Exam',
+              path: 'exam',
+              component: () => import('@/views/Admin/Room/Exam/AdminExam'),
+              props: (value) => ({
+                ...value,
+              }),
+            },
+          ]
+          
+        },
+        
       ]
     },
     // EXAM
