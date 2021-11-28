@@ -3,6 +3,12 @@ import Router from 'vue-router'
 
 Vue.use(Router)
 
+import {
+  checkHomeMiddleware,
+  checkAdminMiddleware,
+  checkDashboardMiddleware,
+} from './middleware/middleware'
+
 export default new Router({
   scrollBehavior: () => ({ y: 0 }),
   routes: [
@@ -10,13 +16,15 @@ export default new Router({
     {
       name: 'Home',
       path: '/',
-      component: () => import('@/views/Home/Home')
+      component: () => import('@/views/Home/Home'),
+      beforeEnter: checkHomeMiddleware
     },
     // DASHBOARD
     {
       name: 'Dashboard',
       path: '/dashboard',
-      component: () => import('@/views/Dashboard/Dashboard')
+      component: () => import('@/views/Dashboard/Dashboard'),
+      beforeEnter: checkDashboardMiddleware
     },
     // EXAM
     {
@@ -27,6 +35,7 @@ export default new Router({
       props: (value) => ({
         ...value,
       }),
+      beforeEnter: checkAdminMiddleware,
       children: [
         {
           name: 'Rooms',

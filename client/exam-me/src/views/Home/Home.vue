@@ -40,6 +40,10 @@ export default {
       const { code } = this
       // CHECK CODE
       if (code.length >= 8) {
+        localStorage.setItem('exam-me-code', code)
+        this.$router.replace({ name: 'Dashboard', params: { code } })
+
+
         let res = await Rooms.get(code)
         localStorage.setItem('exam-me-code', code)
 

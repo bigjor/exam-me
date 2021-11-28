@@ -45,6 +45,7 @@ export default {
       exam: {
         loading: true,
       },
+      exams: []
     }
   },
   methods: {
