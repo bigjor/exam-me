@@ -1,0 +1,124 @@
+@font-face {
+  font-family: "Bahiana";
+  src: local("Bahiana"), url(./assets/fonts/Bahiana-Regular.ttf) format("truetype");
+}
+
+:root {
+  --primary: #B219E5;
+  --secondary: #D787F1;
+  --third: #342C5B;
+  --accent: #545C94;
+  --light-accent: #8690AF;
+  --background: #1C0424;
+}
+
+.logo-text {
+  font-family: Bahiana;
+  font-size: 124px;
+
+  -webkit-text-stroke: 2px var(--light-accent);
+  text-shadow: 5px 5px 5px var(--accent);
+
+  background: var(--background);
+}
+
+.logo-text.small {
+  font-size: 70px;
+  -webkit-text-stroke: 1px var(--light-accent);
+  text-shadow: 3px 3px 3px var(--accent);
+}
+
+.logo {
+  text-align: center;
+}
+
+.main-centered {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.background-app {
+  background: var(--background);
+  height: 100vh;
+}
+
+.grid-table {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-gap: 15px;
+
+  grid-auto-rows: minmax(180px, auto);
+}
+
+@media (min-width: 960px) and (max-width: 1264px) {
+  .grid-table {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 600px) and (max-width: 960px) {
+  .grid-table {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .grid-table {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}
+
+
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-header .card-title {
+  display: flex;
+  align-items: center;
+
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: bold;
+  font-size: 12px;
+  line-height: 14px;
+  text-transform: uppercase;
+
+  color: #555555;
+}
+
+.card-title .card-info {
+  width: 26px;
+  height: 26px;
+
+  background: #555555;
+  border-radius: 4px;
+
+  transition: background .2s;
+}
+
+.card-title .card-info-description {
+  margin: 0 16px;
+}
+
+.card-info.active {
+  background: #545C94;
+}
+
+.card-content {
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: bold;
+  font-size: 14px;
+  line-height: 21px;
+  color: #555;
+}
+
+.card-row {
+  display: flex;
+  justify-content: space-between;
+}

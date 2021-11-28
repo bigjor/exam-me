@@ -1,0 +1,7 @@
+font: Bahlana
+size: 124
+
+outline: 5px #93A2BF
+shadox: 5px blur, 5px offsetX #4B498C
+
+background: #1B0126

@@ -68,6 +68,8 @@ client.on('message', (topic, message, packet) => {
     globalThis.actions.actionRoomCreate(data)
   } else if (action == 'room/update' && isAdmin) {
     globalThis.actions.actionRoomUpdate(data)
+  } else if (action == 'room/details' && isAdmin) {
+    globalThis.actions.actionRoomDetails(data)
   }
 });
 globalThis.mqttClient = client;
@@ -101,13 +103,18 @@ globalThis.actions = {
           for (const adminClient of globalThis.adminClients) {
             globalThis.mqttClient.publish(`examme/${adminClient}`, JSON.stringify({
               content: 'rooms',
-              rooms: result.sort((a, b) => -(a.timestamp - b.timestamp))
+              rooms: result.sort((a, b) => -(a.timestamp - b.timestamp)).filter(room => room._id != 'admin')
             }))
           }
         }
         resolve()
       })
     })
+  },
+  sendRoom: (room, requester) => {
+    let data = { content: 'room' }
+    if (room) data.room = room
+    globalThis.mqttClient.publish(`examme/${requester}`, JSON.stringify(data))
   },
   actionRoomCreate: async (data) => {
     const code = Utils.randomString()
@@ -120,6 +127,20 @@ globalThis.actions = {
         name,
         timestamp: new Date().getTime()
       }, (err) => !err && globalThis.actions.sendRooms())
+  },
+  actionRoomUpdate: async (data) => {
+    data.body._id = ObjectId(data.body._id)
+    globalThis.db
+      .collection('rooms')
+      .save(data.body)
+      .then(() => globalThis.actions.sendRooms())
+  },
+  actionRoomDetails: async (data) => {
+    const { _id, access } = data.body
+    globalThis.db
+      .collection('rooms')
+      .findOne({ _id: ObjectId(_id) })
+      .then(room => globalThis.actions.sendRoom(room, access))
   },
   actionRoomToggleState: async (data) => {
     globalThis.db
@@ -134,11 +155,5 @@ globalThis.actions = {
       .update({ _id: data.body._id }, { $set: { name: data.body.name } }, { upsert: false })
       .then(() => globalThis.actions.sendRooms())
   },
-  actionRoomUpdate: async (data) => {
-    data.body._id = ObjectId(data.body._id)
-    globalThis.db
-      .collection('rooms')
-      .save(data.body)
-      .then(() => globalThis.actions.sendRooms())
-  }
+  
 }
