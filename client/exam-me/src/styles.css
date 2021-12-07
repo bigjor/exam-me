@@ -38,7 +38,8 @@
   align-items: center;
 }
 
-.background-app {
+/* IMPORTANTE PARA SAFARI */
+.background-app, html { 
   background: var(--background);
   min-height: 100vh;
   background-attachment: fixed;
@@ -50,6 +51,10 @@
   grid-gap: 15px;
 
   grid-auto-rows: minmax(180px, auto);
+}
+
+.grid-table-auto-rows {
+  grid-auto-rows: auto !important;
 }
 
 @media (min-width: 960px) and (max-width: 1264px) {

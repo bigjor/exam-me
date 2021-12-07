@@ -13,6 +13,7 @@
   },
   "main": "background.js",
   "dependencies": {
+    "@vue/cli": "^4.5.15",
     "core-js": "^3.6.5",
     "mqtt": "^4.2.8",
     "vue": "^2.6.11",

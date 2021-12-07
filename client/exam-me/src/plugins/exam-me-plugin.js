@@ -39,5 +39,18 @@ export default {
         el.classList.add('grid-table')
       }
     })
+
+    Vue.directive('grid-auto-rows', {
+      inserted: function (el) {
+        el.classList.add('grid-table-auto-rows')
+      }
+    })
+
+    Vue.directive('colspan', {
+      inserted: function (el, binding) {
+        el.style.gridColumn = `span ${binding.value}`
+      }
+    })
+    
   }
 }
