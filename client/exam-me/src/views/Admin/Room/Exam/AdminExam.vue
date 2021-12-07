@@ -8,9 +8,9 @@
           lazy-validation
         >
 
-          <div v-for="(obj, index) of exam_template" :key="`obj-${index}`" :class="{ 'header-style': obj.style == 'header' }">
+          <div v-for="(obj, index) in exam_template" :key="`obj-${index}`" :class="{ 'header-style': obj.style == 'header' }">
             <div class="exam-row" v-grid v-grid-auto-rows v-if="obj.type == 'group'">
-              <div v-for="(item_grp, index_grp) of obj.children" :key="`item-grp-${index}-${index_grp}`">
+              <div v-for="(item_grp, index_grp) in obj.children" :key="`item-grp-${index}-${index_grp}`">
                 <v-text-field
                   v-if="item_grp.type == 'string'"
                   v-model="item_grp.value"
@@ -70,8 +70,31 @@
                 ></v-select>
               </div>
 
-              <div class="question-answers">
+              <div class="question-answers" v-if="hasAnswers(obj)">
+                <div class="question-answer" v-for="(answer, index_answer) in getAnswers(obj)" :key="`answer-${index}-${index_answer}`">
+                  <div>{{ index_answer + 1 }}.</div>
 
+                  <v-text-field
+                    v-model="answer.text"
+                    :label="`Option ${index_answer + 1}`"
+                    hide-details
+                    append-outer-icon="mdi-close"
+                    @click:append-outer="removeAnswer(index, index_answer)"
+                    filled
+                  ></v-text-field>
+                </div>
+
+                <div class="question-answer">
+                  <div>{{ getAnswers(obj).length + 1 }}.</div>
+                  <div>
+                    <v-btn
+                      plain
+                      @click="addAnswer(obj)"
+                    >
+                      Add answer
+                    </v-btn>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -185,6 +208,26 @@ export default {
         type: 'question', // select, checkbox, radio, text, number, date, time, textarea
       })
     },
+    addAnswer(question) {
+      if (!question.answers) question.answers = []
+      question.answers.push({
+        text: '',
+      })
+      this.$forceUpdate()
+    },
+    removeAnswer(index_question, index_answer) {
+      this.exam_template[index_question].answers.splice(index_answer, 1)
+      this.$forceUpdate()
+    },
+    getAnswers(question) {
+      return question.answers || []
+    },
+    hasAnswers(question) {
+      return  question.question_type == 'select' || 
+              question.question_type == 'checkboxes' || 
+              question.question_type == 'radiobuttons'
+    },
+    
     removeQuestion(index) {
       this.exam_template.splice(index, 1)
     },
@@ -243,6 +286,21 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.question-answer {
+  display: flex;
+  align-items: center;
+}
+.question-answer div {
+  margin: 0 10px;
+}
+
+.question-answers .question-answer {
+  margin-top: 10px;
+}
+.question-answers .question-answer:last-child {
+  margin-top: 15px;
 }
 
 .question-title {
