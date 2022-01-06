@@ -37,9 +37,9 @@ export default {
   },
   watch: {
     code: async function () {
-      const { code } = this
+      const { code = '' } = this
       // CHECK CODE
-      if (code.length >= 8) {
+      if (code.trim().length >= 8) {
         localStorage.setItem('exam-me-code', code)
         this.$router.replace({ name: 'Dashboard', params: { code } })
 

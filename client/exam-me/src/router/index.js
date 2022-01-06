@@ -44,11 +44,11 @@ export default new Router({
         },
         {
           name: 'Room',
-          path: 'room/:id',
-          redirect: 'room/:id/exams',
+          path: 'room/:roomId',
+          redirect: 'room/:roomId/exams',
           component: () => import('@/views/Admin/Room/Room'),
           props: (value) => ({
-            roomId: value.params.id,
+            roomId: value.params.roomId,
             ...value,
           }),
           children: [
@@ -77,10 +77,21 @@ export default new Router({
               }),
             },
             {
-              name: 'Exam',
+              name: 'AdminExamCreate',
               path: 'exam',
               component: () => import('@/views/Admin/Room/Exam/AdminExam'),
               props: (value) => ({
+                roomId: value.params.roomId,
+                ...value,
+              }),
+            },
+            {
+              name: 'AdminExamEdit',
+              path: 'exam/:examId',
+              component: () => import('@/views/Admin/Room/Exam/AdminExam'),
+              props: (value) => ({
+                roomId: value.params.roomId,
+                examId: value.params.examId,
                 ...value,
               }),
             },

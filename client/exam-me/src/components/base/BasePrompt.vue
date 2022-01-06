@@ -19,14 +19,14 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn
-            color="primary darken-1"
+            color="third darken-1"
             text
             @click="cancel"
           >
             Cancel
           </v-btn>
           <v-btn
-            color="primary darken-1"
+            color="third darken-1"
             text
             @click="accept"
           >

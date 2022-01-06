@@ -7,11 +7,11 @@
         </div>
         <div> Create Exam </div>
       </div>
-      <div class="exam-card" v-for="(exam, key) in getExams()" :key="key" @click="openExam(exam)">
+      <div class="exam-card" v-for="(exam, key) in getExams()" :key="key" @click="editExam(exam)">
         <div class="card-header">
           <div class="card-title">
             <div class="card-info" :class="{ 'active': exam.active }"></div>
-            <div class="card-info-description">{{ exam.name }}</div>
+            <div class="card-info-description">{{ getExamName(exam) }}</div>
           </div>
           <div class="card-status" @click="toggleStatusExam(exam)">
             <v-icon color="#ED3C24">mdi-power</v-icon>
@@ -20,8 +20,13 @@
 
         <div class="card-content">
           <div class="card-row">
-            <div class="card-row-left">Code:</div>
-            <div class="card-row-right">{{ exam.code }}</div>
+            {{ getExamDescription(exam) }}
+          </div> 
+          <div class="card-row">
+            <div class="card-row-left">End date:</div>
+            <div class="card-row-right">
+              {{ getExamDate(exam) }}
+            </div>
           </div> 
         </div>
       </div>
@@ -48,15 +53,36 @@ export default {
       return this.room?.code || ''
     },
     getExams() {
-      return this.room?.exams || []
+      return (this.exams || []).filter(exam => exam.room_id === this.roomId)
     },
     createExam() {
-      this.$router.push({ name: 'Exam', params: { roomId: this.roomId } })
-    }
+      let route_parts = this.$route.fullPath.split('/')
+      route_parts.pop()
+      route_parts.push(`exam`)
+      const path = route_parts.join('/')
+      this.$router.push({ path })
+    },
+    editExam(exam) {
+      let route_parts = this.$route.fullPath.split('/')
+      route_parts.pop()
+      route_parts.push(`exam/${exam._id}`)
+      const path = route_parts.join('/')
+      this.$router.push({ path })
+    },
+    getExamName(exam) {
+      return exam.content[0].children[0].value
+    },
+    getExamDescription(exam) {
+      return exam.content[0].children[1].value
+    },
+    getExamDate(exam) {
+      return exam.content[0].children[2].value + ' ' + exam.content[0].children[3].value
+    },
   },
   computed: {
     ...mapGetters({
       room: 'rooms/getRoom',
+      exams: 'exams/getExams'
     }),
   },
 

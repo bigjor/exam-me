@@ -10,7 +10,7 @@
 
 <script>
 import mqtt from 'mqtt';
-import { mapActions } from 'vuex';
+import { mapActions, mapState } from 'vuex';
 
 export default {
   name: 'App',
@@ -25,9 +25,14 @@ export default {
     ...mapActions({
       setRooms: 'rooms/setRooms',
       setRoom: 'rooms/setRoom',
+      setExams: 'exams/setExams',
+    }),
+  },
+  computed: {
+    ...mapState({
+      room: state => state.rooms.room,
     })
   },
-
   created() {
     const pj = require('../package.json')
     const clientId = 'mqttjs_' + Math.random().toString(16).substr(2, 8)
@@ -46,10 +51,27 @@ export default {
       
     }
     window.mqtt.publish = (topic, payload, options, callback) => {
+      const access = localStorage.getItem('exam-me-access') 
+      const code = localStorage.getItem('exam-me-code') 
+
+      if (topic.startsWith('/')) {
+        topic = `examme/${access}`
+      }
       if (typeof options === 'function') {
         callback = options
         options = null
       }
+
+      for (const property of payload.inject || []) {
+        switch (property) {
+          case 'access':
+            payload.body.access = access
+            break;
+          case 'code':
+            payload.body.code = code
+        }
+      }
+
       if (typeof payload === 'object') {
         payload = JSON.stringify(payload)
       }
@@ -99,9 +121,16 @@ export default {
     window.mqtt.on('message', (topic, message) => {
       const data = JSON.parse(message.toString())
       console.log('MESSAGE ' + data.content, topic, message)
-      if (data.content == 'rooms') {
+      if (data.content == 'exams') {
+        console.log(this.room)
+        this.setExams({ exams: data.exams, roomId: this.room._id })
+      } else if (data.content == 'rooms') {
         this.setRooms(data.rooms)
       } else if (data.content == 'room') {
+        console.log(data.room)
+        const exams = data.room.exams
+        // delete data.room.exams
+        this.setExams(exams)
         this.setRoom(data.room)
       }
     })

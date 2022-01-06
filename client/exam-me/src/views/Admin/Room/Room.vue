@@ -6,7 +6,7 @@
           <v-btn
             icon
             color="var(--third)"
-            @click="$router.push({ name: 'Rooms' })"
+            @click="goBack()"
           >
             <v-icon>mdi-chevron-left</v-icon>
           </v-btn>
@@ -15,6 +15,7 @@
         <v-tabs
           class="room-tabs"
           fixed-tabs
+          v-model="tab"
           background-color="var(--background)"
           dark
         >
@@ -36,7 +37,7 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 export default {
   name: 'exam',
   props: {
@@ -44,6 +45,7 @@ export default {
   },
   data () {
     return {
+      tab: null,
       exam: {
         loading: true,
       },
@@ -54,21 +56,56 @@ export default {
     getCode () {
       return this.room?.code || ''
     },
+    goBack() {
+      const matched = this.$route.matched
+      const currentPath = this.$route.path
+      const dataPath = currentPath.split('/')
+
+      console.log(this.$route, this.$router)
+      switch (matched[matched.length - 1].path) {
+        case '/admin/room/:roomId/exam/:examId':
+        case '/admin/room/:roomId/exam':
+          this.$router.push({ 
+            path: `/admin/room/${dataPath[3]}/exams`
+          })
+          break
+        case '/admin/room/:roomId':
+          this.$router.push({ 
+            path: '/admin/rooms' 
+          })
+          break
+        case '/admin/room/:roomId/exams':
+        case '/admin/room/:roomId/review':
+        case '/admin/room/:roomId/results':
+          this.$router.push({ 
+            path: `/admin/room/${dataPath[3]}`
+          })
+          break
+        default:
+          this.$router.go(-1)
+          break
+      }
+    }
   },
   computed: {
     ...mapGetters({
       room: 'rooms/getRoom',
     }),
+    ...mapActions('rooms', {
+      unsetRoom: 'unsetRoom',
+    }),
   },
   mounted() {
-    const access = localStorage.getItem('exam-me-access') 
-    window.mqtt.publish(`examme/${access}`, JSON.stringify({
+    window.mqtt.publish(`/`, {
       action: 'room/details',
+      inject: ['access'],
       body: {
         _id: this.roomId,
-        access,
       }
-    }))
+    })
+  },
+  beforeDestroy() {
+    this.unsetRoom()
   }
 
 }

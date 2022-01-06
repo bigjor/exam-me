@@ -70,6 +70,8 @@ client.on('message', (topic, message, packet) => {
     globalThis.actions.actionRoomUpdate(data)
   } else if (action == 'room/details' && isAdmin) {
     globalThis.actions.actionRoomDetails(data)
+  } else if (action == 'room/exam/save' && isAdmin) {
+    globalThis.actions.actionRoomSaveExam(data)
   }
 });
 globalThis.mqttClient = client;
@@ -96,6 +98,7 @@ globalThis.clients = []
 globalThis.adminClients = []
 
 globalThis.actions = {
+  // senders
   sendRooms: () => {
     return new Promise((resolve) => {
       globalThis.db.collection('rooms').find({}).toArray((err, result) => {
@@ -116,6 +119,35 @@ globalThis.actions = {
     if (room) data.room = room
     globalThis.mqttClient.publish(`examme/${requester}`, JSON.stringify(data))
   },
+  sendExams: (roomId, requester, send = true) => {
+    let params = {}
+    if (roomId) params.roomId = roomId
+
+    const getClients = () => {
+      if (requester) return [requester]
+      return globalThis.adminClients
+    }
+
+    return new Promise((resolve) => {
+      globalThis.db.collection('exams').find(params).toArray((err, result) => {
+        let data = null
+        if (!err) {
+          for (const adminClient of getClients()) {
+            data = {
+              content: 'exams',
+              exams: result.sort((a, b) => -(a.timestamp - b.timestamp))
+            }
+            if (send) {
+              globalThis.mqttClient.publish(`examme/${adminClient}`, JSON.stringify(data))
+            }
+          }
+        }
+        resolve(data)
+      })
+    })
+  },
+
+  // actions
   actionRoomCreate: async (data) => {
     const code = Utils.randomString()
     const { name } = data.body
@@ -137,10 +169,17 @@ globalThis.actions = {
   },
   actionRoomDetails: async (data) => {
     const { _id, access } = data.body
+
     globalThis.db
       .collection('rooms')
-      .findOne({ _id: ObjectId(_id) })
-      .then(room => globalThis.actions.sendRoom(room, access))
+      .findOne({ _id: ObjectId(_id) }).then(async room => {
+        // Cancelamos el envio para posteriormente enviarlo
+        globalThis.actions.sendExams(_id, access, false).then(result => {
+          room.exams = result.exams
+          globalThis.actions.sendRoom(room, access)
+        })
+      })
+
   },
   actionRoomToggleState: async (data) => {
     globalThis.db
@@ -155,5 +194,21 @@ globalThis.actions = {
       .update({ _id: data.body._id }, { $set: { name: data.body.name } }, { upsert: false })
       .then(() => globalThis.actions.sendRooms())
   },
-  
+  actionRoomSaveExam: async (data) => {
+    const { _id, exam } = data.body
+    exam.timestamp = new Date().getTime()
+    delete exam._id
+    if (_id) {
+      globalThis.db
+        .collection('exams')
+        .updateOne({ _id: ObjectId(_id) }, { $set: { ...exam } }, { upsert: true })
+        .then(() => globalThis.actions.sendExams())
+    } else {
+      exam.active = false
+      globalThis.db
+        .collection('exams')
+        .insertOne({ ...exam })
+        .then(() => globalThis.actions.sendExams())
+    }
+  }
 }

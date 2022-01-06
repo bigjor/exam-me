@@ -7,8 +7,7 @@
           v-model="valid"
           lazy-validation
         >
-
-          <div v-for="(obj, index) in exam_template" :key="`obj-${index}`" :class="{ 'header-style': obj.style == 'header' }">
+          <div v-for="(obj, index) in getExamContent()" :key="`obj-${index}`" :class="{ 'header-style': obj.style == 'header' }">
             <div class="exam-row" v-grid v-grid-auto-rows v-if="obj.type == 'group'">
               <div v-for="(item_grp, index_grp) in obj.children" :key="`item-grp-${index}-${index_grp}`">
                 <v-text-field
@@ -77,6 +76,7 @@
                   <v-text-field
                     v-model="answer.text"
                     :label="`Option ${index_answer + 1}`"
+                    :rules="[v => !!v || 'Option required']"
                     hide-details
                     append-outer-icon="mdi-close"
                     @click:append-outer="removeAnswer(index, index_answer)"
@@ -98,28 +98,44 @@
               </div>
             </div>
 
-            <v-divider v-if="index != (exam_template.length - 1)"></v-divider>
+            <v-divider v-if="index != (getExamContent().length - 1)"></v-divider>
           </div>
 
           <v-row class="buttons">
-            <v-col cols="12" md="6" lg="6" xl="6">
+            <v-col xs="12">
+              <!-- cols="12" md="6" lg="6" xl="6" -->
               <v-btn
                 block
                 depressed
-                color="primary"
+                color="third"
+                dark
                 @click="addQuestion"
               >
                 Add Question
               </v-btn>
             </v-col>
-            <v-col cols="12" md="6" lg="6" xl="6">
+            <v-col xs="12">
+              <!-- cols="12" md="6" lg="6" xl="6" -->
               <v-btn
                 block
                 depressed
-                color="secondary"
+                color="background"
+                dark
                 @click="saveExam"
               >
                 Save
+              </v-btn>
+            </v-col>
+            <v-col xs="12" v-if="examId">
+              <!-- cols="12" md="6" lg="6" xl="6" -->
+              <v-btn
+                block
+                depressed
+                color="error"
+                dark
+                @click="saveExam"
+              >
+                Delete
               </v-btn>
             </v-col>
           </v-row>
@@ -130,8 +146,13 @@
 </template>
 
 <script>
+import { mapState, mapActions } from 'vuex'
 export default {
   name: 'AdminExam',
+  props: {
+    examId: { type: String },
+    roomId: { type: String },
+  },
   data() {
     return {
       valid: true,
@@ -165,44 +186,26 @@ export default {
           value: 'time'
         }
       ],
-      exam_template: [
-        {
-          type: 'group',
-          style: 'header',
-          children: [
-            {
-              type: 'string',
-              length: 30,
-              required: true,
-              label: 'Name',
-            },
-            {
-              type: 'string',
-              length: 30,
-              required: true,
-              label: 'Description',
-            },
-            {
-              type: 'date',
-              required: true,
-              label: 'Date',
-            },
-            {
-              type: 'time',
-              required: true,
-              label: 'End Time',
-            }
-          ],
-        },
-      ]
+      exam: null
     }
   },
-  methods: {
-    $t(arg) {
-      return arg
+  watch: {
+    savedExam: function(newVal) {
+      this.valid = true
+      this.exam = newVal
     },
+    exam: function(newVal) {
+      if (!newVal) this.setupExam()
+      this.valid = true
+    },
+  },
+  methods: {
+    ...mapActions('exams', {
+      setExam: 'setExamById',
+      unsetExam: 'unsetExam',
+    }),
     addQuestion() {
-      this.exam_template.push({
+      this.exam?.content?.push({
         title: undefined,
         question_type: 'text',
         type: 'question', // select, checkbox, radio, text, number, date, time, textarea
@@ -216,7 +219,7 @@ export default {
       this.$forceUpdate()
     },
     removeAnswer(index_question, index_answer) {
-      this.exam_template[index_question].answers.splice(index_answer, 1)
+      this.exam?.content[index_question].answers.splice(index_answer, 1)
       this.$forceUpdate()
     },
     getAnswers(question) {
@@ -229,14 +232,21 @@ export default {
     },
     
     removeQuestion(index) {
-      this.exam_template.splice(index, 1)
+      this.exam?.content?.splice(index, 1)
     },
     saveExam() {
-      this.$refs.exam_form.validate()
-      if (this.valid) {
-        console.log('valid')
-      } else {
-        console.log('invalid')
+      if (this.$refs.exam_form.validate()) {
+        window.mqtt.publish(`/`, {
+          action: 'room/exam/save',
+          body: {
+            _id: this.examId,
+            exam: this.exam,
+          }
+        })
+
+        this.$router.replace({
+          name: 'Exams',
+        })
       }
     },
     getRulesString(args) {
@@ -245,8 +255,63 @@ export default {
         rules.push(v => v?.length <= args?.length || 'Characters overflowed')
       }
       return rules
+    },
+    getExamContent() {
+      return this.exam?.content || []
+    },
+    setupExam() {
+      this.exam = {
+        roomId: this.roomId,
+        content: [
+          {
+            type: 'group',
+            style: 'header',
+            children: [
+              {
+                type: 'string',
+                length: 30,
+                required: true,
+                label: 'Name',
+              },
+              {
+                type: 'string',
+                length: 30,
+                required: true,
+                label: 'Description',
+              },
+              {
+                type: 'date',
+                required: true,
+                label: 'Date',
+              },
+              {
+                type: 'time',
+                required: true,
+                label: 'End Time',
+              }
+            ],
+          },
+        ]
+      }
+    },
+  },
+  computed: {
+    ...mapState({
+      savedExam: state => state.exams.exam,
+    }),
+  },
+  mounted() {
+    window.adminExam = this
+    this.valid = true
+    if (!this.examId) {
+      this.setupExam()
+    } else {
+      this.setExam(this.examId)
     }
-  }
+  },
+  beforeDestroy() {
+    this.unsetExam()
+  },
 }
 </script>
 

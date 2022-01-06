@@ -51,22 +51,19 @@ export default {
       })
       if (!name) return
 
-      const access = localStorage.getItem('exam-me-access') 
-      window.mqtt.publish(`examme/${access}`, JSON.stringify({
+      window.mqtt.publish(`/`, {
         action: 'room/create',
         body: {
           name,
-          timestamp: new Date().getTime()
         }
-      }))
+      })
     },
     toggleStatusRoom(room) {
-      const access = localStorage.getItem('exam-me-access')
       room.active = !room.active
-      window.mqtt.publish(`examme/${access}`, JSON.stringify({
+      window.mqtt.publish(`/`, {
         action: 'room/update',
         body: room
-      }))
+      })
     },
     openRoom(room) {
       this.$router.push({

@@ -4,6 +4,10 @@ export default {
   install(Vue, options) {
     const { instance } = options
     
+    // Declaramos la instancia de mqtt que tendra la instancie de vue
+    Vue.prototype.$mqtt = null
+
+    // Declaramos la instancia para realizar acciones con la aplicacion
     Vue.prototype.$examme = {
       SNACKBAR: {
         show() {
